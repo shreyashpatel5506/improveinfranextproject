@@ -29,7 +29,7 @@ export async function POST(req) {
 
         const exitinguser = await Officer.findOne({ email })
         if (exitinguser) {
-            return NextResponse.json({ success: false, message: "user is already exiting by this email id" })
+            return NextResponse.json({ success: false, message: "user is already exiting by this email id" }, { status: 203 })
         }
 
         const hashedpassword = await bcrypt.hash(password, 10)
