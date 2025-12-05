@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 const env = process.env.env
 const jwtSecret = process.env.JWTSECRET
 
-const generateToken = (officerId, res) => {
+export const generateToken = (officerId, res) => {
     const token = jwt.sign({ officerId }, jwtSecret, {
         expiresIn: "7d",
     });
@@ -22,7 +22,7 @@ const generateToken = (officerId, res) => {
     return token;
 };
 
-export async function POST(req) {
+export async function POST(req, NextResponse) {
     try {
         await connectMongo();
         const { email, password } = req.body;
@@ -36,7 +36,7 @@ export async function POST(req) {
         const newOfficer = new Officer({ email, password: hashedpassword })
 
         await newOfficer.save()
-        const token = generateToken(newOfficer._id, res)
+        const token = generateToken(newOfficer._id, NextResponse)
         return NextResponse.json(
             {
                 message: "Officer created ",
