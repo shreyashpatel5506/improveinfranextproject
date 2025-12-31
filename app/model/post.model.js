@@ -2,55 +2,115 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
     {
-        title: { type: String, required: true, trim: true },
+        /** 📝 Post Title */
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+        },
 
-        description: { type: String, required: true },
+        /** 🧾 Complaint / Issue Description */
+        description: {
+            type: String,
+            required: true,
+        },
 
-        department: { type: String, required: true },
+        /** 🏢 Department responsible */
+        department: {
+            type: String,
+            required: true,
+        },
 
+        /** 🗂 Issue Category */
         category: {
             type: String,
-            enum: ["Roads & Traffic", "Water", "Electricity", "Garbage", "Emergency", "Other"],
+            enum: [
+                "Roads & Traffic",
+                "Water",
+                "Electricity",
+                "Garbage",
+                "Emergency",
+                "Other",
+            ],
             default: "Other",
         },
 
+        /** 📌 Current status of complaint */
         status: {
             type: String,
             enum: ["Pending", "In Progress", "Resolved"],
             default: "Pending",
         },
 
-        /** 🔥 New Field: location */
+        /** 📍 Location of the issue */
         location: {
             type: String,
             required: true,
         },
 
-        /** 🔥 New Field: priority — only officer can assign */
+        /** 🚨 Priority (assigned by officer/admin) */
         priority: {
             type: String,
             enum: ["Low", "Medium", "High", "Critical"],
             default: "Low",
         },
 
-        imageUrl: { type: String, required: true },
+        /** 🖼 Image URL (optional) */
+        imageUrl: {
+            type: String,
+            default: "",
+        },
 
-        imagePublicId: { type: String, required: true },
+        /** 🎥 Video URL (optional) */
+        videoUrl: {
+            type: String,
+            default: "",
+        },
 
-        likesCount: { type: Number, default: 0 },
+        /** 👍 Total likes */
+        likesCount: {
+            type: Number,
+            default: 0,
+        },
 
+        /** 💬 Comments list */
         comments: [
             {
-                text: { type: String, required: true },
-                createdAt: { type: Date, default: Date.now },
+                text: {
+                    type: String,
+                    required: true,
+                },
+                createdAt: {
+                    type: Date,
+                    default: Date.now,
+                },
             },
         ],
 
-        commentsCount: { type: Number, default: 0 },
+        /** 💬 Number of comments */
+        commentsCount: {
+            type: Number,
+            default: 0,
+        },
 
-        views: { type: Number, default: 0 },
+        /** 👁 Views count */
+        views: {
+            type: Number,
+            default: 0,
+        },
     },
-    { timestamps: true }
+    {
+        timestamps: true, // adds createdAt & updatedAt
+    }
 );
+
+/** ✅ Validation: At least one media required (image OR video) */
+postSchema.pre("validate", function (next) {
+    if (!this.imageUrl && !this.videoUrl) {
+        next(new Error("Either image or video is required"));
+    } else {
+        next();
+    }
+});
 
 export default mongoose.model("Post", postSchema);
