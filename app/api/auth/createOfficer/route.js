@@ -8,7 +8,7 @@ const env = process.env.env
 const jwtSecret = process.env.JWTSECRET
 
 export const generateToken = (officerId, res) => {
-    const token = jwt.sign({ officerId }, jwtSecret, {
+    const token = jwt.sign({ officerId, role: "officer" }, jwtSecret, {
         expiresIn: "7d",
     });
 
