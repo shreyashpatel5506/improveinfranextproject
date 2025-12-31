@@ -25,7 +25,7 @@ export const generateToken = (officerId, res) => {
 export async function POST(req, NextResponse) {
     try {
         await connectMongo();
-        const { email, password } = req.body;
+        const { email, userName, password } = req.body;
 
         const exitinguser = await Officer.findOne({ email })
         if (exitinguser) {
@@ -33,7 +33,7 @@ export async function POST(req, NextResponse) {
         }
 
         const hashedpassword = await bcrypt.hash(password, 10)
-        const newOfficer = new Officer({ email, password: hashedpassword })
+        const newOfficer = new Officer({ email, password: hashedpassword, userName })
 
         await newOfficer.save()
         const token = generateToken(newOfficer._id, NextResponse)
