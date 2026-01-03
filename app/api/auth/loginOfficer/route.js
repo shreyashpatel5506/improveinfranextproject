@@ -1,4 +1,4 @@
- import bcrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Officer from "@/app/model/Officer.model";
 import connectMongo from "@/app/db";
@@ -8,7 +8,7 @@ export async function POST(req) {
   try {
     await connectMongo();
 
-    const { email, password} = await req.json();
+    const { email, password } = await req.json();
 
     /* ===============================
        Validation
@@ -37,10 +37,7 @@ export async function POST(req) {
     /* ===============================
        Verify Password
     ================================ */
-    const isValidPassword = await bcrypt.compare(
-      password,
-      officer.password
-    );
+    const isValidPassword = await bcrypt.compare(password, officer.password);
 
     if (!isValidPassword) {
       return NextResponse.json(
@@ -71,6 +68,7 @@ export async function POST(req) {
       {
         success: true,
         message: "Officer login successful",
+        token,
       },
       { status: 200 }
     );

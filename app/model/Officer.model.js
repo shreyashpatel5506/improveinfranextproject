@@ -1,27 +1,30 @@
-import mongoose from 'mongoose';
-import { unique } from 'next/dist/build/utils';
+import mongoose from "mongoose";
 
-const officerSchema = new mongoose.Schema({
-    email:
-    {
-        type: String,
-        required: true,
-        unique: true,
+const officerSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
     },
     userName: {
-        type: String,
-        required: true,
-        unique: true
+      type: String,
+      required: true,
+      unique: true,
     },
-    password:
-    {
-        type: String,
-        required: true
+    password: {
+      type: String,
+      required: true,
     },
+    role: {
+      type: String,
+      default: "officer",
+    },
+  },
+  { timestamps: true }
+);
 
-},
-    { timestamps: true });
-
-const Officer = mongoose.model('User', officerSchema);
+const Officer =
+  mongoose.models.Officer || mongoose.model("Officer", officerSchema);
 
 export default Officer;
