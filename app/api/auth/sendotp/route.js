@@ -1,3 +1,5 @@
+import { saveOtp } from "@/app/lib/otpstore";
+
 export  async function POST(params) {
     try {
     const { email } = req.body;
@@ -34,7 +36,7 @@ export  async function POST(params) {
         },
       }
     );
-
+    saveOtp(email,otp);
     return res.status(200).json({ message: "OTP sent", success: true });
 
   } catch (error) {
