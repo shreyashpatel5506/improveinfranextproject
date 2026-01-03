@@ -1,5 +1,5 @@
 import connectMongo from "@/app/db";
-import Post from "@/app/model/Post.model";
+import postModel from "@/app/model/post.model";
 import { NextResponse } from "next/server";
 
 export async function PATCH(req) {
@@ -31,7 +31,7 @@ export async function PATCH(req) {
       );
     }
 
-    const post = await Post.findByIdAndUpdate(
+    const post = await postModel.findByIdAndUpdate(
       postId,
       { status },
       { new: true }
