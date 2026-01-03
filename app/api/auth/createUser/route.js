@@ -4,6 +4,8 @@ import Otp from "@/app/model/otp.model";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
+import jwt from "jsonwebtoken";
+
 export async function POST(req) {
   try {
     await connectMongo();
@@ -50,12 +52,32 @@ export async function POST(req) {
       password: hashedPassword,
       emailVerified: true,
     });
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: "user",
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
+    /* ===============================
+           Set Cookie (Secure)
+        ================================ */
+
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
     return NextResponse.json(
       {
         success: true,
         message: "User registered successfully",
-        user
+        user,
+        token,
       },
       { status: 201 }
     );

@@ -1,5 +1,5 @@
 import connectMongo from "@/app/db";
-import User from "@/models/User";
+import User from "@/app/model/user.model";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
