@@ -1,6 +1,6 @@
 import connectMongo from "@/app/db";
-import User from "@/models/User";
-import Otp from "@/models/Otp.model";
+import User from "@/app/model/user.model";
+import Otp from "@/app/model/otp.model";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
@@ -55,7 +55,7 @@ export async function POST(req) {
       {
         success: true,
         message: "User registered successfully",
-        userId: user._id,
+        user
       },
       { status: 201 }
     );

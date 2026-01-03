@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/app/db";
-import Otp from "@/models/Otp.model";
+import Otp from "@/app/model/otp.model"
 
 export async function POST(req) {
   try {
