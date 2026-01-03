@@ -7,9 +7,9 @@ export async function POST(req) {
   try {
     await connectMongo();
 
-    const { email, password } = await req.json();
+    const { email, password,userName } = await req.json();
 
-    if (!email || !password) {
+    if (!email || !password || !userName) {
       return NextResponse.json(
         { message: "Email and password required", success: false },
         { status: 400 }
@@ -28,6 +28,7 @@ export async function POST(req) {
 
     const user = await User.create({
       email,
+      userName,
       password: hashedPassword,
     });
 
