@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
+import connectMongo from "@/app/db";
+import Otp from "@/models/Otp.model";
 import axios from "axios";
-import { saveOtp } from "@/app/lib/otpstore";
-export const runtime = "nodejs";
 
 export async function POST(req) {
   try {
+    await connectMongo();
+
     const { email } = await req.json();
 
-    /* ---------------- VALIDATION ---------------- */
     if (!email) {
       return NextResponse.json(
         { success: false, message: "Email is required" },
@@ -23,10 +24,18 @@ export async function POST(req) {
       );
     }
 
-    /* ---------------- OTP GENERATION ---------------- */
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    /* ---------------- SEND OTP (BREVO) ---------------- */
+    // remove old OTP if exists
+    await Otp.deleteMany({ email });
+
+    await Otp.create({
+      email,
+      otp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min
+    });
+
+    // SEND EMAIL (BREVO)
     await axios.post(
       "https://api.brevo.com/v3/smtp/email",
       {
@@ -36,10 +45,7 @@ export async function POST(req) {
         },
         to: [{ email }],
         subject: "🔐 Your OTP Code",
-        htmlContent: `
-          <h2>Your OTP is ${otp}</h2>
-          <p>This OTP is valid for 10 minutes.</p>
-        `,
+        htmlContent: `<h2>Your OTP is ${otp}</h2><p>Valid for 10 minutes</p>`,
       },
       {
         headers: {
@@ -49,20 +55,12 @@ export async function POST(req) {
       }
     );
 
-    /* ---------------- SAVE OTP (TEMP) ---------------- */
-    saveOtp(email, otp);
-
     return NextResponse.json(
       { success: true, message: "OTP sent successfully" },
       { status: 200 }
     );
-
   } catch (error) {
-    console.error(
-      "Brevo API OTP error:",
-      error?.response?.data || error.message
-    );
-
+    console.error(error);
     return NextResponse.json(
       { success: false, message: "Failed to send OTP" },
       { status: 500 }

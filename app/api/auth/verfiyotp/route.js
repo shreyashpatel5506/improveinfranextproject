@@ -1,38 +1,43 @@
 import { NextResponse } from "next/server";
-import { verifyOtp } from "@/app/lib/otpstore";
-export const runtime = "nodejs";
+import connectMongo from "@/app/db";
+import Otp from "@/models/Otp.model";
 
 export async function POST(req) {
   try {
+    await connectMongo();
+
     const { email, otp } = await req.json();
 
     if (!email || !otp) {
       return NextResponse.json(
-        { message: "Email and OTP are required", success: false },
+        { success: false, message: "Email and OTP required" },
         { status: 400 }
       );
     }
 
-    const isValid = verifyOtp(email, otp);
+    const record = await Otp.findOne({ email, otp });
 
-    if (!isValid) {
+    if (!record) {
       return NextResponse.json(
-        { message: "Invalid or expired OTP", success: false },
+        { success: false, message: "Invalid or expired OTP" },
         { status: 400 }
       );
     }
+
+    // OTP valid → delete
+    await Otp.deleteOne({ _id: record._id });
 
     return NextResponse.json(
       {
-        message: "Email verified successfully",
         success: true,
+        message: "Email verified successfully",
       },
       { status: 200 }
     );
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { message: "OTP verification failed", success: false },
+      { success: false, message: "OTP verification failed" },
       { status: 500 }
     );
   }
