@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-export function middleware(request) {
+export function proxy(request) {
   console.log("🔥 Auth middleware running...");
 
   const url = request.nextUrl.pathname;

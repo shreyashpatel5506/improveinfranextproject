@@ -1,28 +1,26 @@
-const otpStore = new Map();
-/*
-  key   → email
-  value → { otp, expiresAt }
-*/
+globalThis.otpStore = globalThis.otpStore || new Map();
 
-export const saveOtp = (email, otp) => {
+const otpStore = globalThis.otpStore;
+
+export function saveOtp(email, otp) {
   otpStore.set(email, {
     otp,
-    expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+    expiresAt: Date.now() + 10 * 60 * 1000,
   });
-};
+}
 
-export const verifyOtp = (email, otp) => {
-  const data = otpStore.get(email);
+export function verifyOtp(email, userOtp) {
+  const record = otpStore.get(email);
+  if (!record) return false;
 
-  if (!data) return false;
-
-  if (Date.now() > data.expiresAt) {
+  if (Date.now() > record.expiresAt) {
     otpStore.delete(email);
     return false;
   }
 
-  if (data.otp !== otp) return false;
+  if (record.otp !== String(userOtp)) return false;
 
-  otpStore.delete(email); // OTP used once
+  otpStore.delete(email);
   return true;
-};
+}
+

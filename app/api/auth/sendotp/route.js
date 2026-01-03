@@ -1,20 +1,32 @@
+import { NextResponse } from "next/server";
+import axios from "axios";
 import { saveOtp } from "@/app/lib/otpstore";
+export const runtime = "nodejs";
 
-export  async function POST(params) {
-    try {
-    const { email } = req.body;
+export async function POST(req) {
+  try {
+    const { email } = await req.json();
 
+    /* ---------------- VALIDATION ---------------- */
     if (!email) {
-      return res.status(400).json({ message: "Email is required", success: false });
+      return NextResponse.json(
+        { success: false, message: "Email is required" },
+        { status: 400 }
+      );
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(422).json({ message: "Invalid email format", success: false });
+      return NextResponse.json(
+        { success: false, message: "Invalid email format" },
+        { status: 422 }
+      );
     }
 
+    /* ---------------- OTP GENERATION ---------------- */
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
+    /* ---------------- SEND OTP (BREVO) ---------------- */
     await axios.post(
       "https://api.brevo.com/v3/smtp/email",
       {
@@ -36,11 +48,24 @@ export  async function POST(params) {
         },
       }
     );
-    saveOtp(email,otp);
-    return res.status(200).json({ message: "OTP sent", success: true });
+
+    /* ---------------- SAVE OTP (TEMP) ---------------- */
+    saveOtp(email, otp);
+
+    return NextResponse.json(
+      { success: true, message: "OTP sent successfully" },
+      { status: 200 }
+    );
 
   } catch (error) {
-    console.error("Brevo API OTP error:", error?.response?.data || error.message);
-    return res.status(500).json({ message: "Failed to send OTP", success: false });
+    console.error(
+      "Brevo API OTP error:",
+      error?.response?.data || error.message
+    );
+
+    return NextResponse.json(
+      { success: false, message: "Failed to send OTP" },
+      { status: 500 }
+    );
   }
 }

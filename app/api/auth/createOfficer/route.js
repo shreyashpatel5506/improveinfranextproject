@@ -25,7 +25,7 @@ export const generateToken = (officerId, res) => {
 export async function POST(req, NextResponse) {
     try {
         await connectMongo();
-        const { email, userName, password } = req.body;
+        const { email, userName, password } =await req.body;
 
         const exitinguser = await Officer.findOne({ email })
         if (exitinguser) {
