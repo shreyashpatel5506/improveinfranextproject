@@ -63,6 +63,7 @@ export async function POST(req) {
         message: "Login successful",
         success: true,
         token, // optional (frontend needs it)
+        user,
       },
       { status: 200 }
     );

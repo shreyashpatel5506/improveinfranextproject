@@ -1,5 +1,6 @@
 import connectMongo from "@/app/db";
 import Post from "@/app/model/post.model";
+import User from "@/app/model/user.model"; // 👈 User model import zaroori hai
 import { uploadToCloudinary } from "@/app/lib/cloudinary";
 import { NextResponse } from "next/server";
 
@@ -16,15 +17,29 @@ export async function POST(req) {
     const imageFile = formData.get("image");
     const videoFile = formData.get("video");
 
-    // Basic Validation
-    if (!title || !description || !department || !location) {
+    // 1. Frontend (LocalStorage) se bheji gayi userId nikalna
+    const userId = formData.get("userId");
+
+    // Validation
+    if (!title || !description || !department || !location || !userId) {
       return NextResponse.json(
-        { message: "Required fields missing", success: false },
+        {
+          message: "Required fields (including userId) missing",
+          success: false,
+        },
         { status: 400 }
       );
     }
 
-    // Ensure at least one media type is present
+    // 2. Database se User fetch karna taaki uska actual data save ho sake
+    const userFromDB = await User.findById(userId).select("userName email");
+    if (!userFromDB) {
+      return NextResponse.json(
+        { message: "Invalid User ID. Post cannot be created.", success: false },
+        { status: 404 }
+      );
+    }
+
     if (!imageFile && !videoFile) {
       return NextResponse.json(
         { message: "Image or video is required", success: false },
@@ -38,14 +53,12 @@ export async function POST(req) {
     let imageUrl = "";
     let videoUrl = "";
 
-    // 1. Process Image if it exists
     if (imageFile && imageFile.size > 0) {
       const imgBuffer = Buffer.from(await imageFile.arrayBuffer());
       const imgResult = await uploadToCloudinary(imgBuffer);
       imageUrl = imgResult.url;
     }
 
-    // 2. Process Video if it exists
     if (videoFile && videoFile.size > 0) {
       const vidBuffer = Buffer.from(await videoFile.arrayBuffer());
       const vidResult = await uploadToCloudinary(vidBuffer);
@@ -53,7 +66,7 @@ export async function POST(req) {
     }
 
     /* ===============================
-        Create Post Document
+        Create Post Document with createdUser
     ================================ */
     const post = await Post.create({
       title,
@@ -61,8 +74,14 @@ export async function POST(req) {
       department,
       category,
       location,
-      imageUrl, // Saved from the independent check above
-      videoUrl, // Saved from the independent check above
+      imageUrl,
+      videoUrl,
+      // 3. Post create karte waqt user details embed karna
+      createdUser: {
+        _id: userFromDB._id,
+        userName: userFromDB.userName,
+        email: userFromDB.email,
+      },
     });
 
     return NextResponse.json(

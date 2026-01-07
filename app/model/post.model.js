@@ -72,18 +72,25 @@ const postSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-
+    createdUser: {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      userName: { type: String, required: true },
+      email: { type: String, required: true },
+    },
     /** 💬 Comments list */
     comments: [
       {
-        text: {
-          type: String,
-          required: true,
+        text: { type: String, required: true },
+        user: {
+          _id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+          userName: String,
+          email: String,
         },
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
+        createdAt: { type: Date, default: Date.now },
       },
     ],
 

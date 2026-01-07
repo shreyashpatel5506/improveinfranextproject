@@ -1,40 +1,69 @@
 import connectMongo from "@/app/db";
 import Post from "@/app/model/post.model";
+import User from "@/app/model/user.model";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
     await connectMongo();
 
-    // Get ID from ?id=... and text from JSON body
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    const { text } = await req.json();
+    const postId = searchParams.get("id");
 
-    if (!id || !text) {
+    // Testing ke liye body mein sirf 'text' aur 'userId' bhej rahe hain
+    const { text, userId } = await req.json();
+
+    if (!postId || !text || !userId) {
       return NextResponse.json(
-        { success: false, message: "Missing ID or text" },
+        { success: false, message: "Post ID, text, and userId are required" },
         { status: 400 }
       );
     }
 
-    // Atomic update: Push comment and increment count
+    // 1. Database se actual User details fetch karein (Security Step)
+    const userFromDB = await User.findById(userId).select("userName email");
+
+    if (!userFromDB) {
+      return NextResponse.json(
+        { success: false, message: "Invalid User ID. User not found." },
+        { status: 404 }
+      );
+    }
+
+    /* ============================================================
+       2. Post update karein:
+       User object ke andar database se aayi hui real details save hogi
+    ============================================================ */
     const updatedPost = await Post.findByIdAndUpdate(
-      id,
+      postId,
       {
-        $push: { comments: { text } },
+        $push: {
+          comments: {
+            text: text,
+            user: {
+              _id: userFromDB._id,
+              userName: userFromDB.userName,
+              email: userFromDB.email,
+            },
+          },
+        },
         $inc: { commentsCount: 1 },
       },
       { new: true }
     );
 
     return NextResponse.json(
-      { success: true, post: updatedPost },
+      {
+        success: true,
+        message: "Comment added successfully",
+        post: updatedPost,
+      },
       { status: 201 }
     );
   } catch (error) {
+    console.error("Add Comment Error:", error);
     return NextResponse.json(
-      { success: false, message: "Error adding comment" },
+      { success: false, message: "Internal server error" },
       { status: 500 }
     );
   }
