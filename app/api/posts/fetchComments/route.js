@@ -1,3 +1,8 @@
+import connectMongo from "@/app/db";
+import Post from "@/app/model/post.model";
+import User from "@/app/model/user.model";
+import { NextResponse } from "next/server";
+
 export async function GET(req) {
   try {
     await connectMongo();
