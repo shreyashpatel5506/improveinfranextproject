@@ -1,22 +1,13 @@
 import connectMongo from "@/app/db";
 import Post from "@/app/model/post.model";
-import { uploadToCloudinary } from "@/config/cloudinary";
+import { uploadToCloudinary } from "@/app/lib/cloudinary";
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
-/* ===============================
-   POST → Create New Post
-================================ */
 export async function POST(req) {
   try {
     await connectMongo();
-
     const formData = await req.formData();
 
-    /* ===============================
-           Extract Fields
-        ================================ */
     const title = formData.get("title");
     const description = formData.get("description");
     const department = formData.get("department");
@@ -25,9 +16,7 @@ export async function POST(req) {
     const imageFile = formData.get("image");
     const videoFile = formData.get("video");
 
-    /* ===============================
-           Validation
-        ================================ */
+    // Basic Validation
     if (!title || !description || !department || !location) {
       return NextResponse.json(
         { message: "Required fields missing", success: false },
@@ -35,6 +24,7 @@ export async function POST(req) {
       );
     }
 
+    // Ensure at least one media type is present
     if (!imageFile && !videoFile) {
       return NextResponse.json(
         { message: "Image or video is required", success: false },
@@ -43,37 +33,36 @@ export async function POST(req) {
     }
 
     /* ===============================
-           Save File Temporarily
-        ================================ */
-    let mediaResult = null;
+        Handle Independent Uploads
+    ================================ */
+    let imageUrl = "";
+    let videoUrl = "";
 
-    if (imageFile || videoFile) {
-      const file = imageFile || videoFile;
-      const buffer = Buffer.from(await file.arrayBuffer());
+    // 1. Process Image if it exists
+    if (imageFile && imageFile.size > 0) {
+      const imgBuffer = Buffer.from(await imageFile.arrayBuffer());
+      const imgResult = await uploadToCloudinary(imgBuffer);
+      imageUrl = imgResult.url;
+    }
 
-      const tempDir = path.join(process.cwd(), "public/temp");
-      if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-
-      const filePath = path.join(tempDir, file.name);
-      fs.writeFileSync(filePath, buffer);
-
-      /* ===============================
-               Upload to Cloudinary
-            ================================ */
-      mediaResult = await uploadToCloudinary(filePath);
+    // 2. Process Video if it exists
+    if (videoFile && videoFile.size > 0) {
+      const vidBuffer = Buffer.from(await videoFile.arrayBuffer());
+      const vidResult = await uploadToCloudinary(vidBuffer);
+      videoUrl = vidResult.url;
     }
 
     /* ===============================
-           Create Post Document
-        ================================ */
+        Create Post Document
+    ================================ */
     const post = await Post.create({
       title,
       description,
       department,
       category,
       location,
-      imageUrl: mediaResult?.resource_type === "image" ? mediaResult.url : "",
-      videoUrl: mediaResult?.resource_type === "video" ? mediaResult.url : "",
+      imageUrl, // Saved from the independent check above
+      videoUrl, // Saved from the independent check above
     });
 
     return NextResponse.json(
@@ -85,10 +74,10 @@ export async function POST(req) {
       { status: 201 }
     );
   } catch (error) {
-    console.error(error);
+    console.error("Upload Error:", error);
     return NextResponse.json(
       {
-        message: "Error when trying to create a post",
+        message: error.message || "Error when trying to create a post",
         success: false,
       },
       { status: 500 }

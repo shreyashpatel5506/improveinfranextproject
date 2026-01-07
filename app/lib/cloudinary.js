@@ -1,59 +1,41 @@
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
 
-/* ===============================
-   Cloudinary Configuration
-================================ */
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-/* ===============================
-   Upload File (Image / Video)
-   resource_type: "auto" supports both
-================================ */
-export const uploadToCloudinary = async (
-    filePath,
-    folder = "complaints"
-) => {
-    try {
-        const result = await cloudinary.uploader.upload(filePath, {
-            folder,
-            resource_type: "auto", // image OR video
+/** * Upload directly from a Buffer (No temporary local files)
+ */
+export const uploadToCloudinary = async (buffer, folder = "complaints") => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: "auto" },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve({
+          url: result.secure_url,
+          public_id: result.public_id,
+          resource_type: result.resource_type,
         });
-
-        // remove file from server after upload
-        fs.unlinkSync(filePath);
-
-        return {
-            url: result.secure_url,
-            public_id: result.public_id,
-            resource_type: result.resource_type,
-        };
-    } catch (error) {
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-        throw error;
-    }
+      }
+    );
+    uploadStream.end(buffer);
+  });
 };
 
-/* ===============================
-   Delete File from Cloudinary
-================================ */
 export const deleteFromCloudinary = async (
-    publicId,
-    resourceType = "image"
+  publicId,
+  resourceType = "image"
 ) => {
-    try {
-        await cloudinary.uploader.destroy(publicId, {
-            resource_type: resourceType, // image | video
-        });
-    } catch (error) {
-        throw error;
-    }
+  try {
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
+  } catch (error) {
+    throw error;
+  }
 };
 
 export default cloudinary;
