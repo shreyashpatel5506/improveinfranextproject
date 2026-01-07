@@ -1,5 +1,5 @@
 import connectMongo from "@/app/db";
-import Post from "@/models/Post";
+import Post from "@/app/model/post.model";
 import { NextResponse } from "next/server";
 
 /* ===============================
