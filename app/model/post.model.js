@@ -68,10 +68,8 @@ const postSchema = new mongoose.Schema(
     },
 
     /** 👍 Total likes */
-    likesCount: {
-      type: Number,
-      default: 0,
-    },
+    likesCount: { type: Number, default: 0 },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Tracking ke liye zaroori hai
     createdUser: {
       _id: {
         type: mongoose.Schema.Types.ObjectId,
