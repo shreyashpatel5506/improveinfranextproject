@@ -13,8 +13,10 @@ export async function PATCH(req) {
         { status: 403 }
       );
     }
+    const { searchParams } = new URL(req.url);
+    const postId = searchParams.get("id");
 
-    const { postId, priority } = await req.json();
+    const { priority } = await req.json();
 
     if (!postId || !priority) {
       return NextResponse.json(
@@ -49,7 +51,6 @@ export async function PATCH(req) {
       message: "Priority updated successfully",
       data: post,
     });
-
   } catch (error) {
     console.error("Update priority error:", error);
     return NextResponse.json(
