@@ -37,25 +37,23 @@ export function proxy(request) {
 
   /** 🔒 Officer only routes */
   const officerOnlyRoutes = [
-    "/api/post/create",
     "/api/post/update",
-    "/api/post/delete",
-    "/api/post/changeStatus",
-    "/api/post/setPriority"
+    "/api/updatePriority",
+    "/api/updateStatus",
   ];
 
   /** 👤 User only routes */
   const userOnlyRoutes = [
-    "/api/post/create",
-    "/api/comment/add",
-    "/api/comment/delete",
-    "/api/like/toggle",
-    "/api/user/profile"
+    "/api/createPost",
+    "/api/posts/AddComments",
+    "/api/posts/fetchComments",
+    "/api/posts/like",
+    "/api/getsinglepost",
   ];
 
   /* -------------------- ROLE CHECK -------------------- */
 
-  if (officerOnlyRoutes.some(route => url.startsWith(route))) {
+  if (officerOnlyRoutes.some((route) => url.startsWith(route))) {
     if (decoded.role !== "officer") {
       return NextResponse.json(
         { success: false, message: "Officers only" },
@@ -64,7 +62,7 @@ export function proxy(request) {
     }
   }
 
-  if (userOnlyRoutes.some(route => url.startsWith(route))) {
+  if (userOnlyRoutes.some((route) => url.startsWith(route))) {
     if (decoded.role !== "user") {
       return NextResponse.json(
         { success: false, message: "Users only" },
@@ -93,6 +91,7 @@ export const config = {
     "/api/post/:path*",
     "/api/comment/:path*",
     "/api/like/:path*",
-    "/api/user/:path*"
+    "/api/user/:path*",
+    "/api/:path*",
   ],
 };
