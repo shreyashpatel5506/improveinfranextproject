@@ -13,8 +13,9 @@ export async function PATCH(req) {
         { status: 403 }
       );
     }
-
-    const { postId, status } = await req.json();
+    const { searchParams } = new URL(req.url);
+    const postId = searchParams.get("id");
+    const { status } = await req.json();
 
     if (!postId || !status) {
       return NextResponse.json(
@@ -49,7 +50,6 @@ export async function PATCH(req) {
       message: "Status updated successfully",
       data: post,
     });
-
   } catch (error) {
     console.error("Update status error:", error);
     return NextResponse.json(
